@@ -134,11 +134,18 @@ export default {
 			this.editDialogVisible = true
 			this.operation = true
 			this.dataForm = Object.assign({},dataForm_Temp),
+			this.$nextTick(() => {
+				this.$refs.dataForm.clearValidate()
+			})
+		},
 		// 显示编辑界面
 		handleEdit: function (params) {
 			this.editDialogVisible = true
 			this.operation = false
-			this.dataForm = Object.assign({}, params.row)
+			this.dataForm = Object.assign({}, params.row),
+			this.$nextTick(() => {
+				this.$refs.dataForm.clearValidate()
+			})
 		},
 		// 编辑
 		submitForm: function () {
@@ -163,9 +170,9 @@ export default {
 			})
 		},
 		// 时间格式化
-	      	dateFormat: function (row, column, cellValue, index){
-	          	return format(row[column.property])
-	      	}
+      	dateFormat: function (row, column, cellValue, index){
+        	return format(row[column.property])
+      	}
 	},
 	mounted() {
 	}
