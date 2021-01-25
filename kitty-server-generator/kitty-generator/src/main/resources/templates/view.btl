@@ -15,7 +15,7 @@
 		</el-form>
 	</div>
 	<!--表格内容栏-->
-	<kt-table permsEdit="prj:${table.objectName}:edit" permsDelete="prj:${table.objectName}:delete"
+	<kt-table :height="height" permsEdit="prj:${table.objectName}:edit" permsDelete="prj:${table.objectName}:delete"
 		:data="pageResult" :columns="columns" 
 		@findPage="findPage" @handleEdit="handleEdit" @handleDelete="handleDelete">
 	</kt-table>
@@ -86,6 +86,7 @@ export default {
 	},
 	data() {
 		return {
+			height: window.innerHeight*0.6,
 			size: 'small',
 			filters: {
 				__demoField__: ''
@@ -172,10 +173,29 @@ export default {
 		// 时间格式化
       	dateFormat: function (row, column, cellValue, index){
         	return format(row[column.property])
-      	}
+      	},
+		//查询字典列表
+		findDictByType(dict_type) {
+			return this.$api.dict.findByType({type: dict_type}).then(res=>{
+				let dict_arr = [];
+				if(res.code == 200 && res.data && res.data.length > 0){
+					for(let i=0;i<res.data.length;i++)
+						dict_arr.push({label: res.data[i].label, value: res.data[i].value});
+				}
+				return dict_arr;
+			});
+		},
+		//下拉选项：通过value获取label
+		findNameByValue(dict_arr, dict_value){
+			for(let i=0,j=dict_arr.length;i<j;i++){
+				if(dict_arr[i].value == dict_value)
+					return dict_arr[i].label;
+			}
+			return '';
+		},
 	},
-	mounted() {
-	}
+	mounted() {},
+	created() {},
 }
 </script>
 
