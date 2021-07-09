@@ -19,7 +19,7 @@ import ${table.servicePackageName}.${table.className}Service;
  * ---------------------------
  * 作者：  kitty-generator
  * 时间：  ${strutil.formatDate(date(),'yyyy-MM-dd HH:mm:ss')}
- * 说明：  我是由代码生成器生生成的
+ * 说明：  ${table.className}ServiceImpl
  * ---------------------------
  */
 @Service
@@ -57,6 +57,11 @@ public class ${table.className}ServiceImpl implements ${table.className}Service 
 	@Override
 	public PageResult findPage(PageRequest pageRequest) {
 		return MybatisPageHelper.findPageByMap(pageRequest, ${table.objectName}Mapper);
+	}
+
+	@Override
+	public List<${table.className}> findAll() {
+	    return ${table.objectName}Mapper.findAll();
 	}
 	
 }

@@ -13,7 +13,7 @@ import com.hhlx.kitty.dbms.vo.ConnParam;
 public class GenerateModel {
 
 	private String outPutFolderPath;
-	private String basePackage = "com.hhlx.kitty.admin";
+	private String basePackage = "com.hhlx.admin";
 	private ConnParam connParam;
 	private List<TableModel> tableModels = new ArrayList<>();
 	

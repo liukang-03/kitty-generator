@@ -22,7 +22,7 @@ import ${table.servicePackageName}.${table.className}Service;
  * ---------------------------
  * 作者：  kitty-generator
  * 时间：  ${strutil.formatDate(date(),'yyyy-MM-dd HH:mm:ss')}
- * 说明：  我是由代码生成器生生成的
+ * 说明：  ${table.className}Controller
  * ---------------------------
  */
 @RestController

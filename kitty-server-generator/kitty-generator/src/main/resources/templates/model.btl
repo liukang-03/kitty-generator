@@ -6,13 +6,13 @@ package ${table.modelPackageName};
  * ---------------------------
  * 作者：  kitty-generator
  * 时间：  ${strutil.formatDate(date(),'yyyy-MM-dd HH:mm:ss')}
- * 说明：  我是由代码生成器生生成的
+ * 说明：  ${table.className}
  * ---------------------------
  */
 public class ${table.className} extends BaseModel {
 
 <%
-	var columnNames_remove=["id","createBy","createTime","lastUpdateBy","lastUpdateTime"];
+	var columnNames_remove=["id","createBy","createTime","lastUpdateBy","lastUpdateTime","delFlag"];
 	var columns_target=[];
 	for(column in table.columns){
 		if(!array.contain(columnNames_remove,column.fieldName)){

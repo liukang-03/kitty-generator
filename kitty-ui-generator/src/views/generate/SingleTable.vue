@@ -183,7 +183,7 @@ export default {
         if (res.code == 200) {
           this.generateModel = res.data
           this.treeData = this.generateModel.tableModels
-          this.generateModel.outPutFolderPath = 'C:\\kitty'
+          this.generateModel.outPutFolderPath = 'X:\\draft\\kitty-generator'
           this.disabledGenerateBtn = false
         } else {
           this.$message({ message: res.msg, type: "error" })
@@ -201,7 +201,7 @@ export default {
     },
     // 选择代码输出目录
     chooseOutputFolder() {
-      this.generateModel.outPutFolderPath = 'C:\\kitty\\output'
+      this.generateModel.outPutFolderPath = 'X:\\draft\\kitty-generator\\output'
     },
     // 生成代码
     generateCode() {

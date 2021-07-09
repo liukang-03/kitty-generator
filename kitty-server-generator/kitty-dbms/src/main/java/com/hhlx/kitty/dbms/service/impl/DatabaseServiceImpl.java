@@ -22,6 +22,7 @@ import com.hhlx.kitty.dbms.vo.ConnParam;
  * @author Louis
  * @date Nov 10, 2018
  */
+@SuppressWarnings("Duplicates")
 @Component
 public class DatabaseServiceImpl implements DatabaseService {
 

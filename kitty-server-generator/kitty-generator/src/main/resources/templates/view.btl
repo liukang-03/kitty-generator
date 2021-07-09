@@ -1,7 +1,7 @@
 <template>
-  <div class="container" style="width:99%;">
+  <div class="page-container" >
 	<!--工具栏-->
-	<div class="toolbar" style="float:left;padding-top:10px;padding-left:15px;">
+	<div class="toolbar search-bar">
 		<el-form :inline="true" :model="filters" :size="size">
 			<el-form-item>
 				<el-input v-model="filters.__demoField__" placeholder="名称"></el-input>
@@ -25,7 +25,7 @@
 		<el-form :model="dataForm" label-width="150px" :rules="dataFormRules" ref="dataForm" :size="size">
 			<!-- v-if="dataForm.isPrimaryKey"  "column.isPrimaryKey"  "union primary key" -->
 <%
-	var columnNames_remove=["createBy","createTime","lastUpdateBy","lastUpdateTime","deleteFlag"];
+	var columnNames_remove=["createBy","createTime","lastUpdateBy","lastUpdateTime","deleteFlag","delFlag"];
 	var columns_target=[];
 	for(column in table.columns){
 		if(!array.contain(columnNames_remove,column.fieldName)){
@@ -70,13 +70,7 @@ import KtButton from "@/views/Core/KtButton"
 import { format } from "@/utils/datetime"
 //表单模板
 const dataForm_Temp = {
-<%
-	for(column in columns_target) {
-%>
-		${column.fieldName}: null,
-<%
-	}
-%>
+<% for(column in columns_target) { %> ${column.fieldName}: null,<% } %>
 }
 export default {
 	name:"${table.className}",

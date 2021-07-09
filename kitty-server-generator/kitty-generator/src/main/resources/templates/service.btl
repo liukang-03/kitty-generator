@@ -9,9 +9,14 @@ import com.hhlx.kitty.core.service.CurdService;
  * ---------------------------
  * 作者：  kitty-generator
  * 时间：  ${strutil.formatDate(date(),'yyyy-MM-dd HH:mm:ss')}
- * 说明：  我是由代码生成器生生成的
+ * 说明：  ${table.className}Service
  * ---------------------------
  */
 public interface ${table.className}Service extends CurdService<${table.className}> {
 
+    /**
+     * 功能：查找所有记录
+     * @return
+     */
+    public List<${table.className}> findAll();
 }

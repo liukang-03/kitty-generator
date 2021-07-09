@@ -1,7 +1,7 @@
 import axios from '../../axios'
 
 /* 
- * 代码自动生成
+ * kitty-generator: ${table.objectName}
  */
 
 // 保存

@@ -12,7 +12,7 @@ import com.hhlx.kitty.core.page.ColumnFilter;
  * ---------------------------
  * 作者：  kitty-generator
  * 时间：  ${strutil.formatDate(date(),'yyyy-MM-dd HH:mm:ss')}
- * 说明：  我是由代码生成器生生成的
+ * 说明：  ${table.className}Mapper
  * ---------------------------
  */
 public interface ${table.className}Mapper {
@@ -51,5 +51,11 @@ public interface ${table.className}Mapper {
      * @return
      */    
     List<${table.className}> findPage(Map<String,ColumnFilter> paramMap);
+
+    /**
+     * 查询所有记录
+     * @return
+     */
+    List<${table.className}> findAll();
     
 }

@@ -17,27 +17,46 @@
 	}
 %>
   </resultMap>
-  
+
+  <%
+      var column_names = "";
+      var column_field_names = "";
+      var columnNames_modifyIgnore=["createTime","lastUpdateTime","lastUpdateBy","delFlag"];
+      var target_columns=[];
+      for(column in table.columns) {
+        if(!array.contain(columnNames_modifyIgnore,column.fieldName)){
+            column_names = column_names + column.name + "," ;
+            column_field_names = column_field_names + column.fieldName + "," ;
+            array.add(target_columns, column);
+        }
+      }
+      column_names = strutil.subStringTo(column_names, 0, strutil.length(column_names)-1);
+      column_field_names = strutil.subStringTo(column_field_names, 0, strutil.length(column_field_names)-1);
+  %>
+  <sql id="Base_Column_List">
+      ${column_names}
+  </sql>
+
+  <sql id="Base_Column_Field_List">
+      ${column_field_names}
+  </sql>
+
   <insert id="add" parameterType="${table.modelPackageName}.${table.className}">
     insert into ${table.name}
     <trim prefix="(" suffix=")" suffixOverrides=",">
 <%
-	for(column in table.columns) {
-%>	       
-      <if test="${column.fieldName} != null">
-        ${column.name},
-      </if>
+	for(column in target_columns) {
+%>
+      <if test="${column.fieldName} != null">${column.name},</if>
 <%
 	}
 %>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
 <%
-	for(column in table.columns) {
-%>	       
-      <if test="${column.fieldName} != null">
-        #{${column.fieldName},jdbcType=${column.jdbcType}},
-      </if>
+	for(column in target_columns) {
+%>
+      <if test="${column.fieldName} != null">#{${column.fieldName},jdbcType=${column.jdbcType}},</if>
 <%
 	}
 %>
@@ -53,11 +72,9 @@
     update ${table.name}
     <set>
 <%
-	for(column in table.columns) {
-%>	       
-      <if test="${column.fieldName} != null">
-        ${column.name} = #{${column.fieldName},jdbcType=${column.jdbcType}},
-      </if>
+	for(column in target_columns) {
+%>
+      <if test="${column.fieldName} != null">${column.name} = #{${column.fieldName},jdbcType=${column.jdbcType}},</if>
 <%
 	}
 %>   
@@ -66,12 +83,23 @@
   </update>
 
   <select id="findById" parameterType="java.lang.${table.primaryKey.javaType}" resultMap="BaseResultMap">
-    select * from ${table.name}
+    select <include refid="Base_Column_List" />
+    from ${table.name}
     where ${table.primaryKey.name} = #{${table.primaryKey.fieldName},jdbcType=${table.primaryKey.jdbcType}}
   </select>
-  
+
+  <sql id="findList">
+    select <include refid="Base_Column_List" />
+    from ${table.name} t
+    where 1=1
+  </sql>
+
   <select id="findPage" resultMap="BaseResultMap">
-    select * from ${table.name} where 1=1 
+    <include refid="findList" />
   </select>
-  
+
+  <select id="findAll" resultMap="BaseResultMap">
+    <include refid="findList" />
+  </select>
+
 </mapper>
