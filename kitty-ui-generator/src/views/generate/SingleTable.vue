@@ -21,7 +21,7 @@
     
     <div class="right-container">
       <div class="base-info">
-        <el-form ref="tableForm" class="tableForm" :model="tableModel" :inline="true" label-width="70px"
+        <el-form ref="tableForm" class="tableForm" :model="tableModel" :inline="true" label-width="100px"
           size="small">
           <el-form-item label="表名">
             <el-input v-model="tableModel.name" :readonly="true"></el-input>
@@ -41,21 +41,40 @@
               <span v-if="scope.row.primaryKey">
                 <i class="fa fa-key" style="color:#CBA623;"></i>
               </span>
+              <span v-else-if="isUniqueKey(scope.row)">
+                <i class="fa fa-paperclip" style="color:#0055ff;"></i>
+              </span>
             </template>
           </el-table-column>
           <el-table-column prop="name" label="字段名" width="110"></el-table-column>
-          <el-table-column prop="fieldName" label="属性名" width="110"></el-table-column>
-          <el-table-column prop="dataType" label="数据类型" width="100"></el-table-column>
-          <el-table-column prop="javaType" label="Java类型" width="100"></el-table-column>
-          <el-table-column prop="length" label="长度" width="80"></el-table-column>
-          <el-table-column prop="precision" label="精度" width="80"></el-table-column>
-          <el-table-column prop="javaType" label="非空" width="80">
+          <el-table-column prop="fieldName" label="属性名" width="100"></el-table-column>
+          <el-table-column prop="dataType" label="数据类型" width="80"></el-table-column>
+          <el-table-column prop="javaType" label="Java类型" width="90"></el-table-column>
+          <el-table-column prop="length" label="长度" width="50"></el-table-column>
+          <!-- <el-table-column prop="precision" label="精度" width="80"></el-table-column> -->
+          <el-table-column prop="nullable" label="非空" width="50">
             <template slot-scope="scope">
               <span v-if="!scope.row.nullable" type="success">✔</span>
               <span v-else type="danger">✘</span>
             </template>           
           </el-table-column>
-          <el-table-column prop="description" label="描述"></el-table-column>
+          <el-table-column prop="description" label="描述" width="100"></el-table-column>
+          <el-table-column prop="search" label="是否查询" width="75" >
+            <template slot-scope="scope">
+              <el-checkbox v-model="scope.row.search" ></el-checkbox>
+            </template>
+          </el-table-column>
+          <el-table-column prop="dict" label="是否字典" width="75">
+            <template slot-scope="scope">
+              <el-checkbox v-model="scope.row.dict" ></el-checkbox>
+            </template>
+          </el-table-column>
+          <el-table-column prop="dictType" label="字典类型" width="125">
+            <template slot-scope="scope">
+              <el-input v-show="scope.row.dict" size="small" v-model="scope.row.dictType"></el-input>
+            </template>
+          </el-table-column>
+
         </el-table>
       </div>
       <div class="option-info">
@@ -183,7 +202,7 @@ export default {
         if (res.code == 200) {
           this.generateModel = res.data
           this.treeData = this.generateModel.tableModels
-          this.generateModel.outPutFolderPath = 'X:\\draft\\kitty-generator'
+          this.generateModel.outPutFolderPath = 'X:\\draft\\kitty-generator\\out'
           this.disabledGenerateBtn = false
         } else {
           this.$message({ message: res.msg, type: "error" })
@@ -201,7 +220,7 @@ export default {
     },
     // 选择代码输出目录
     chooseOutputFolder() {
-      this.generateModel.outPutFolderPath = 'X:\\draft\\kitty-generator\\output'
+      this.generateModel.outPutFolderPath = 'X:\\draft\\kitty-generator\\out'
     },
     // 生成代码
     generateCode() {
@@ -215,7 +234,17 @@ export default {
         }
         this.generateLoading = false
       })
-    }
+    },
+    //是否是唯一索引键
+    isUniqueKey(row) {
+      if(!this.tableModel.uniqueKeys || this.tableModel.uniqueKeys.length == 0)
+        return false;
+      for(let i=0,j=this.tableModel.uniqueKeys.length;i<j;i++) {
+        if(row.name == this.tableModel.uniqueKeys[i].name)
+          return true;
+      }
+      return false;
+    },
   }
 }
 </script>
@@ -267,5 +296,10 @@ export default {
 }
 .tree {
   padding-top: 10px;
+}
+
+.column-info .el-input--small>input.el-input__inner {
+    height: 23px;
+    line-height: 23px;
 }
 </style>

@@ -36,6 +36,14 @@ public class ColumnModel {
     private String precision;
     /** 描述 */
     private String description;
+
+    /* 是否是查询条件 */
+    private boolean isSearch;
+    /* 是否是字典项 */
+    private boolean isDict;
+    /* 字典项类型 */
+    private String dictType;
+
 	public String getFieldName() {
 		return fieldName;
 	}
@@ -120,5 +128,26 @@ public class ColumnModel {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-    
+	public boolean isSearch() {
+		return isSearch;
+	}
+	public void setSearch(boolean search) {
+		isSearch = search;
+	}
+
+	public boolean isDict() {
+		return isDict;
+	}
+
+	public void setDict(boolean dict) {
+		isDict = dict;
+	}
+
+	public String getDictType() {
+		return dictType;
+	}
+
+	public void setDictType(String dictType) {
+		this.dictType = dictType;
+	}
 }

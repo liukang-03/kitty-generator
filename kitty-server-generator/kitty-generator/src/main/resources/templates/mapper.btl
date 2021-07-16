@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import ${table.modelPackageName}.${table.className};
-import com.hhlx.kitty.core.page.ColumnFilter;
+import com.hhlx.core.page.ColumnFilter;
+import org.springframework.stereotype.Repository;
 
 /**
  * ---------------------------
@@ -15,6 +16,7 @@ import com.hhlx.kitty.core.page.ColumnFilter;
  * 说明：  ${table.className}Mapper
  * ---------------------------
  */
+@Repository
 public interface ${table.className}Mapper {
 
 	/**
@@ -57,5 +59,9 @@ public interface ${table.className}Mapper {
      * @return
      */
     List<${table.className}> findAll();
+
+    <% if(!isEmpty(table.uniqueKeys)) { %>
+    int isUnique(Map<String, Object> paramMap);
+    <% } %>
     
 }

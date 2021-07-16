@@ -32,6 +32,8 @@ public class TableModel {
 	private String objectName;
 	/** 主键列 */
 	private ColumnModel primaryKey;
+	/* 唯一键（排除主键外：如果有多组唯一键，只取第一组） */
+	private List<ColumnModel> uniqueKeys;
 	
     /** 表名 */
     private String name;
@@ -164,4 +166,11 @@ public class TableModel {
 		this.primaryKey = primaryKey;
 	}
 
+	public List<ColumnModel> getUniqueKeys() {
+		return uniqueKeys;
+	}
+
+	public void setUniqueKeys(List<ColumnModel> uniqueKeys) {
+		this.uniqueKeys = uniqueKeys;
+	}
 }

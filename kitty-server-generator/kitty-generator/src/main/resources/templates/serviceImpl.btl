@@ -1,13 +1,14 @@
 package ${table.serviceImplPackageName};
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.hhlx.kitty.core.page.MybatisPageHelper;
-import com.hhlx.kitty.core.page.PageRequest;
-import com.hhlx.kitty.core.page.PageResult;
+import com.hhlx.core.page.MybatisPageHelper;
+import com.hhlx.core.page.PageRequest;
+import com.hhlx.core.page.PageResult;
 
 import ${table.modelPackageName}.${table.className};
 import ${table.daoPackageName}.${table.className}Mapper;
@@ -63,5 +64,13 @@ public class ${table.className}ServiceImpl implements ${table.className}Service 
 	public List<${table.className}> findAll() {
 	    return ${table.objectName}Mapper.findAll();
 	}
+
+    <% if(!isEmpty(table.uniqueKeys)) { %>
+	@Override
+    public boolean isUnique(Map<String, Object> paramMap) {
+        int count = ${table.objectName}Mapper.isUnique(paramMap);
+        return count == 0;
+    }
+    <% } %>
 	
 }

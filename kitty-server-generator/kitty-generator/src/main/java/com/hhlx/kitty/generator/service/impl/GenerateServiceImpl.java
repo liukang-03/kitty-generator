@@ -6,6 +6,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hhlx.kitty.dbms.model.Index;
 import org.beetl.core.Configuration;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
@@ -89,6 +90,8 @@ public class GenerateServiceImpl implements GenerateService {
 			tableModel.setObjectName(StringUtils.uncapitalize(tableModel.getClassName()));
 			// 加载表字段
 			tableModel.setColumns(getColumns(tableModel, connParam, tableName));
+			// 加载唯一索引字段
+			tableModel.setUniqueKeys(getUniqueColumns(tableModel, connParam, tableName));
 		}
 		return generateModel;
 	}
@@ -125,6 +128,44 @@ public class GenerateServiceImpl implements GenerateService {
 		}
 		return columnModels;
 	}
+
+
+	private List<ColumnModel> getUniqueColumns(TableModel tableModel, ConnParam connParam, String tableName) {
+		List<ColumnModel> allColumns = tableModel.getColumns();
+		List<ColumnModel> uniqueColumns = new ArrayList<>();
+
+		List<Index> indexs = databaseService.getIndexes(connParam, tableName);
+		for (Index index : indexs) {
+			if(index.isUnique() && !index.getName().equals("PRIMARY")) {
+				List<String> columns = index.getCloumns();
+				for (String column : columns) {
+					ColumnModel m = this.fetchColumnByName(allColumns, column);
+					if(m != null)
+						uniqueColumns.add(m);
+				}
+				//如果存在多组唯一索引，则只保留第一组
+				break;
+			}
+		}
+
+		return uniqueColumns;
+	}
+
+	/**
+	 * 功能：根据column名称获取
+	 *
+	 * @param tableModel
+	 * @param targetColumnName
+	 * @return
+	 */
+	public ColumnModel fetchColumnByName(List<ColumnModel> columns, String targetColumnName) {
+		for (ColumnModel column : columns) {
+			if(column.getName().equals(targetColumnName))
+				return column;
+		}
+		return null;
+	}
+
 	
 	@Override
 	public boolean generateModels(GenerateModel generateModel) throws Exception {

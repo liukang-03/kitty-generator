@@ -1,7 +1,10 @@
 package ${table.servicePackageName};
 
 import ${table.modelPackageName}.${table.className};
-import com.hhlx.kitty.core.service.CurdService;
+import com.hhlx.core.service.CurdService;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * ---------------------------
@@ -19,4 +22,11 @@ public interface ${table.className}Service extends CurdService<${table.className
      * @return
      */
     public List<${table.className}> findAll();
+
+    <% if(!isEmpty(table.uniqueKeys)) { %>
+    /*
+     * 功能： 唯一性校验
+     */
+    boolean isUnique(Map<String, Object> paramMap);
+    <% } %>
 }

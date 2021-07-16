@@ -1,6 +1,8 @@
 package ${table.controllerPackageName};
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,15 +12,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hhlx.kitty.core.http.HttpResult;
-import com.hhlx.kitty.core.page.PageRequest;
+import com.hhlx.core.http.HttpResult;
+import com.hhlx.core.page.PageRequest;
 
 import ${table.modelPackageName}.${table.className};
 import ${table.servicePackageName}.${table.className}Service;
 
 /**
  * ---------------------------
- * ${table.description} (${table.className}Controller)         
+ * ${table.description} (${table.className}Controller)		 
  * ---------------------------
  * 作者：  kitty-generator
  * 时间：  ${strutil.formatDate(date(),'yyyy-MM-dd HH:mm:ss')}
@@ -71,4 +73,32 @@ public class ${table.className}Controller {
 	public HttpResult findById(@RequestParam ${table.primaryKey.javaType} ${table.primaryKey.fieldName}) {
 		return HttpResult.ok(${table.objectName}Service.findById(${table.primaryKey.fieldName}));
 	}
+
+	<% if(!isEmpty(table.uniqueKeys)) { %>
+	@RequestMapping(value="/isUnique")
+    public HttpResult isUnique(HttpServletRequest request) {
+		String id = request.getParameter("id");
+		<%
+		    for(uniqueKey in table.uniqueKeys){
+		%>
+		String ${uniqueKey.fieldName} = request.getParameter("${uniqueKey.fieldName}");
+		<%
+		    }
+		%>
+		Map<String,Object> paramMap = new HashMap<>();
+		paramMap.put("id", StringUtils.trimToNull(id));
+		<%
+            for(uniqueKey in table.uniqueKeys){
+        %>
+		paramMap.put("${uniqueKey.fieldName}", ${uniqueKey.fieldName});
+		<%
+            }
+        %>
+		boolean isUnique = ${table.objectName}Service.isUnique(paramMap);
+		
+		//设备编码唯一性校验
+		return HttpResult.ok(isUnique);
+    }
+    <% } %>
+
 }

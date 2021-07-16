@@ -96,10 +96,28 @@
 
   <select id="findPage" resultMap="BaseResultMap">
     <include refid="findList" />
+    <%
+       for(column in target_columns) {
+          if(column.isSearch) {
+    %>
+    <if test="${column.fieldName} != null"> And t.${column.name} like CONCAT('%',#{${column.fieldName} },'%') </if>
+    <%
+          }
+       }
+    %>
   </select>
 
   <select id="findAll" resultMap="BaseResultMap">
     <include refid="findList" />
   </select>
+
+  <% if(!isEmpty(table.uniqueKeys)) { %>
+  <!-- 唯一性校验  -->
+  <select id="isUnique" resultType="java.lang.Integer" parameterType="map">
+     select count(1) from ${table.name} t
+     where 1=1 <% for(uniqueKey in table.uniqueKeys){ %> and t.${uniqueKey.name} = #{${uniqueKey.fieldName}} <% } %>
+     <if test="id != null"> and t.id != #{id} </if>
+  </select>
+  <% } %>
 
 </mapper>

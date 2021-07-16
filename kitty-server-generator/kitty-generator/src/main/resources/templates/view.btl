@@ -1,11 +1,39 @@
 <template>
+<%
+	var columnNames_remove=["createBy","createTime","lastUpdateBy","lastUpdateTime","deleteFlag","delFlag"];
+	var columns_target=[];
+	for(column in table.columns) {
+		if(!array.contain(columnNames_remove,column.fieldName)){
+			array.add(columns_target,column);
+		}
+	}
+%>
   <div class="page-container" >
 	<!--工具栏-->
 	<div class="toolbar search-bar">
 		<el-form :inline="true" :model="filters" :size="size">
+		<%
+		   for(column in columns_target) {
+			  if(column.isSearch) {
+		%>
 			<el-form-item>
-				<el-input v-model="filters.__demoField__" placeholder="名称"></el-input>
+			<% if(column.dataType == "datetime"){ %>
+				<el-date-picker v-model="filters.${column.fieldName}" type="datetime" placeholder="选择${column.description}"
+					  style="width:200px;" >
+				</el-date-picker>
+			<% } else if(column.isDict) { %>
+				<el-input v-model="filters.${column.fieldName}" placeholder="${column.description}" ></el-input>
+				<el-select style="width:200px;" v-model="filters.${column.fieldName}" clearable filterable placeholder="请选择${column.description}" >
+					<el-option v-for="item in options_${column.fieldName}" :key="item.value" :label="item.label" :value="item.value"></el-option>
+				</el-select>
+			<% } else { %>
+				<el-input v-model="filters.${column.fieldName}" placeholder="${column.description}" ></el-input>
+			<% } %>
 			</el-form-item>
+		<%
+			  }
+		   }
+		%>
 			<el-form-item>
 				<kt-button :label="$t('action.search')" perms="prj:${table.objectName}:view" type="primary" @click="findPage(null)"/>
 			</el-form-item>
@@ -16,38 +44,42 @@
 	</div>
 	<!--表格内容栏-->
 	<kt-table :height="height" permsEdit="prj:${table.objectName}:edit" permsDelete="prj:${table.objectName}:delete"
-		:data="pageResult" :columns="columns" 
+		:data="pageResult" :columns="columns"
+		:isReady="isReady" :showParticulars="showParticulars" :showOperation="!showParticulars"
 		@findPage="findPage" @handleEdit="handleEdit" @handleDelete="handleDelete">
 	</kt-table>
 	<!--新增编辑界面-->
-	<el-dialog :title="(operation?'新增':'编辑')+' - '+this.$store.state.tab.mainTabsActiveName" 
+	<el-dialog :title="(operation?'新增':(showParticulars?'查看':'编辑'))+' - '+this.$store.state.tab.mainTabsActiveName"
 		   width="45%" :visible.sync="editDialogVisible" :close-on-click-modal="false" v-dialogDrag >
 		<el-form :model="dataForm" label-width="150px" :rules="dataFormRules" ref="dataForm" :size="size">
 			<!-- v-if="dataForm.isPrimaryKey"  "column.isPrimaryKey"  "union primary key" -->
-<%
-	var columnNames_remove=["createBy","createTime","lastUpdateBy","lastUpdateTime","deleteFlag","delFlag"];
-	var columns_target=[];
-	for(column in table.columns){
-		if(!array.contain(columnNames_remove,column.fieldName)){
-			array.add(columns_target,column);
-		}
-	}
-%>
 
 <%
+	var is_column_id = false;
 	for(column in columns_target) {
+		is_column_id = (strutil.toLowerCase(column.fieldName) == "id");
 %>
-			<el-form-item label="${column.description}" prop="${column.fieldName}" <% if(strutil.toLowerCase(column.fieldName) == "id") { %> v-if="dataForm.${column.fieldName} != null" v-show="false" <% } %> >
+			<el-form-item label="${column.description}" prop="${column.fieldName}" <% if(is_column_id) { %> v-if="dataForm.${column.fieldName} != null" v-show="false" <% } %> >
 			<%
 				if(column.dataType == "datetime"){
 			%>
 				<el-date-picker v-model="dataForm.${column.fieldName}" type="datetime" placeholder="选择${column.description}"
-				      style="width:100%;"  align="right" >
+					  style="width:100%;"  align="right" >
 				</el-date-picker>		
+			<%
+				} else if(column.isDict) {
+			%>
+				<el-select style="width:100%" v-model="dataForm.${column.fieldName}" clearable filterable placeholder="请选择${column.description}" :disabled="showParticulars" >
+					<el-option v-for="item in options_${column.fieldName}" :key="item.value" :label="item.label" :value="item.value"></el-option>
+				</el-select>
+			<%
+				} else if(is_column_id) {
+			%>
+				<el-input v-if="!showParticulars" v-model="dataForm.${column.fieldName}" auto-complete="off"></el-input>
 			<%
 				} else {
 			%>
-				<el-input v-model="dataForm.${column.fieldName}" auto-complete="off"></el-input>
+				<el-input v-model="dataForm.${column.fieldName}" auto-complete="off" :disabled="showParticulars" ></el-input>
 			<%
 				}
 			%>
@@ -57,8 +89,8 @@
 %>
 		</el-form>
 		<div slot="footer" class="dialog-footer">
-			<el-button :size="size" @click.native="editDialogVisible = false">{{$t('action.cancel')}}</el-button>
-			<el-button :size="size" type="primary" @click.native="submitForm" :loading="editLoading">{{$t('action.submit')}}</el-button>
+			<el-button :size="size" @click.native="editDialogVisible = false">{{showParticulars ? $t('action.close'):$t('action.cancel')}}</el-button>
+			<el-button :size="size" v-if="!showParticulars" type="primary" @click.native="submitForm" :loading="editLoading">{{$t('action.submit')}}</el-button>
 		</div>
 	</el-dialog>
   </div>
@@ -72,6 +104,7 @@ import { format } from "@/utils/datetime"
 const dataForm_Temp = {
 <% for(column in columns_target) { %> ${column.fieldName}: null,<% } %>
 }
+
 export default {
 	name:"${table.className}",
 	components:{
@@ -80,30 +113,64 @@ export default {
 	},
 	data() {
 		return {
+			isReady: false,
+			showParticulars: false, // 启用查看（页面将不可编辑）
 			height: window.innerHeight*0.6,
 			size: 'small',
 			filters: {
-				__demoField__: ''
+				<%
+				   for(column in columns_target) {
+					  if(column.isSearch) {
+				%>
+				${column.fieldName}: '',
+				<%
+					  }
+				   }
+				%>
 			},
 			columns: [
-<%
-	for(column in columns_target) {
-%>	
+			<%
+				for(column in columns_target) {
+					if(strutil.toLowerCase(column.fieldName) != "id") {
+			%>
+					<% if(column.isDict){ %>
+				{prop:"${column.fieldName}_Label", label:"${column.description}", minWidth:100 },
+					<% } else { %>
 				{prop:"${column.fieldName}", label:"${column.description}", minWidth:100, <% if(column.dataType == "datetime"){ %> formatter: this.dateFormat <% } %> },
-<%
-	}
-%>
+					<% } %>
+			<%
+					}
+				}
+			%>
 			],
 			pageRequest: { pageNum: 1, pageSize: 8 },
 			pageResult: {},
+			/* 翻译字典项 */
+			translation: [],
+			//字典项
+			<%
+			   for(column in columns_target) {
+				  if(column.isDict) {
+			%>
+			options_${column.fieldName}: [],
+			<%
+				  }
+			   }
+			%>
 
 			operation: false, // true:新增, false:编辑
 			editDialogVisible: false, // 新增编辑界面是否显示
 			editLoading: false,
 			dataFormRules: {
-				__demoField__: [
-					{ required: true, message: '请输入名称', trigger: 'blur' }
-				]
+				<%
+				   for(column in columns_target) {
+					  if(!column.isNullable && strutil.toLowerCase(column.fieldName) != "id") {
+				%>
+				${column.fieldName}: [{ required: true, message: '请输入${column.description}', trigger: 'blur' }],
+				<%
+					  }
+				   }
+				%>
 			},
 			// 新增编辑界面数据
 			dataForm: Object.assign({},dataForm_Temp)
@@ -115,9 +182,26 @@ export default {
 			if(data !== null) {
 				this.pageRequest = data.pageRequest
 			}
-			this.pageRequest.columnFilters = {__demoField__: {name:'__demoField__', value:this.filters.__demoField__}}
+			this.pageRequest.columnFilters = {
+			<%
+			   for(column in columns_target) {
+				  if(column.isSearch) {
+			%>
+				${column.fieldName}: {name:'${column.fieldName}', value:this.filters.${column.fieldName}}
+			<%
+				  }
+			   }
+			%>
+			}
 			this.$api.${table.objectName}.findPage(this.pageRequest).then((res) => {
-				this.pageResult = res.data
+				let tmpLs = res.data
+				for(let i=0,j=tmpLs.content.length;i<j;i++) {
+					this.translation.forEach(item => {
+						tmpLs.content[i][item.col_label] = this.findNameByValue(item.options, tmpLs.content[i][item.col])
+					});
+				}
+				this.pageResult = tmpLs
+				//this.pageResult = res.data
 			}).then(data!=null?data.callback:'')
 		},
 		// 批量删除
@@ -147,6 +231,19 @@ export default {
 			this.$refs.dataForm.validate((valid) => {
 				if (valid) {
 					this.$confirm('确认提交吗？', '提示', {}).then(() => {
+						<% if(!isEmpty(table.uniqueKeys)) { %>
+						//校验唯一性
+						let uniqueRes = await this.$api.mCar.isUnique({
+							<% for(uniqueKey in table.uniqueKeys){ %>
+							"${uniqueKey.fieldName}":this.dataForm.${uniqueKey.fieldName},
+							<% } %>
+							"id": (this.dataForm.id || '')
+						});
+						if(!uniqueRes.data){
+							this.$message({message: '<% for(uniqueKey in table.uniqueKeys){ %>${uniqueKey.description} <% } %>已经存在，不能重复添加!', type: 'error'})
+							return;
+						}
+						<% } %>
 						this.editLoading = true
 						let params = Object.assign({}, this.dataForm)
 						this.$api.${table.objectName}.save(params).then((res) => {
@@ -165,9 +262,9 @@ export default {
 			})
 		},
 		// 时间格式化
-      	dateFormat: function (row, column, cellValue, index){
-        	return format(row[column.property])
-      	},
+		dateFormat: function (row, column, cellValue, index){
+			return format(row[column.property])
+		},
 		//查询字典列表
 		findDictByType(dict_type) {
 			return this.$api.dict.findByType({type: dict_type}).then(res=>{
@@ -189,7 +286,34 @@ export default {
 		},
 	},
 	mounted() {},
-	created() {},
+	async created() {
+		//查询字典数据
+		//options = await findDictByType('type');
+		<%
+		   for(column in columns_target) {
+			  if(column.isDict) {
+		%>
+		this.options_${column.fieldName} = await this.findDictByType('${column.dictType}');
+		<%
+			  }
+		   }
+		%>
+		this.translation = [
+			/*{col:"type", col_label:"type_Label",options: options_type},*/
+			<%
+			   for(column in columns_target) {
+				  if(column.isDict) {
+			%>
+			{col:"${column.fieldName}", col_label:"${column.fieldName}_Label", options: this.options_${column.fieldName}},
+			<%
+				  }
+			   }
+			%>
+		],
+
+		//调用findPage查询数据
+		this.isReady = true
+	},
 }
 </script>
 
