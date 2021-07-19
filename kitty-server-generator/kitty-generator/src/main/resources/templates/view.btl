@@ -22,7 +22,6 @@
 					  style="width:200px;" >
 				</el-date-picker>
 			<% } else if(column.isDict) { %>
-				<el-input v-model="filters.${column.fieldName}" placeholder="${column.description}" ></el-input>
 				<el-select style="width:200px;" v-model="filters.${column.fieldName}" clearable filterable placeholder="请选择${column.description}" >
 					<el-option v-for="item in options_${column.fieldName}" :key="item.value" :label="item.label" :value="item.value"></el-option>
 				</el-select>
@@ -44,7 +43,7 @@
 	</div>
 	<!--表格内容栏-->
 	<kt-table :height="height" permsEdit="prj:${table.objectName}:edit" permsDelete="prj:${table.objectName}:delete"
-		:data="pageResult" :columns="columns"
+		:data="pageResult" :columns="columns" ref="currTable" @beforeHooks="beforeHooks"
 		:isReady="isReady" :showParticulars="showParticulars" :showOperation="!showParticulars"
 		@findPage="findPage" @handleEdit="handleEdit" @handleDelete="handleDelete">
 	</kt-table>
@@ -99,7 +98,8 @@
 <script>
 import KtTable from "@/views/Core/KtTable"
 import KtButton from "@/views/Core/KtButton"
-import { format } from "@/utils/datetime"
+import { dateFormat_Table } from "@/utils/datetime"
+
 //表单模板
 const dataForm_Temp = {
 <% for(column in columns_target) { %> ${column.fieldName}: null,<% } %>
@@ -136,7 +136,7 @@ export default {
 					<% if(column.isDict){ %>
 				{prop:"${column.fieldName}_Label", label:"${column.description}", minWidth:100 },
 					<% } else { %>
-				{prop:"${column.fieldName}", label:"${column.description}", minWidth:100, <% if(column.dataType == "datetime"){ %> formatter: this.dateFormat <% } %> },
+				{prop:"${column.fieldName}", label:"${column.description}", minWidth:100, <% if(column.dataType == "datetime"){ %> formatter: dateFormat_Table <% } %> },
 					<% } %>
 			<%
 					}
@@ -187,7 +187,7 @@ export default {
 			   for(column in columns_target) {
 				  if(column.isSearch) {
 			%>
-				${column.fieldName}: {name:'${column.fieldName}', value:this.filters.${column.fieldName}}
+				${column.fieldName}: {name:'${column.fieldName}', value:this.filters.${column.fieldName}},
 			<%
 				  }
 			   }
@@ -197,7 +197,7 @@ export default {
 				let tmpLs = res.data
 				for(let i=0,j=tmpLs.content.length;i<j;i++) {
 					this.translation.forEach(item => {
-						tmpLs.content[i][item.col_label] = this.findNameByValue(item.options, tmpLs.content[i][item.col])
+						tmpLs.content[i][item.col_label] = this.$refs.currTable.findNameByValue(item.options, tmpLs.content[i][item.col])
 					});
 				}
 				this.pageResult = tmpLs
@@ -230,7 +230,7 @@ export default {
 		submitForm: function () {
 			this.$refs.dataForm.validate((valid) => {
 				if (valid) {
-					this.$confirm('确认提交吗？', '提示', {}).then(() => {
+					this.$confirm('确认提交吗？', '提示', {}).then(async () => {
 						<% if(!isEmpty(table.uniqueKeys)) { %>
 						//校验唯一性
 						let uniqueRes = await this.$api.mCar.isUnique({
@@ -261,59 +261,41 @@ export default {
 				}
 			})
 		},
-		// 时间格式化
-		dateFormat: function (row, column, cellValue, index){
-			return format(row[column.property])
-		},
-		//查询字典列表
-		findDictByType(dict_type) {
-			return this.$api.dict.findByType({type: dict_type}).then(res=>{
-				let dict_arr = [];
-				if(res.code == 200 && res.data && res.data.length > 0){
-					for(let i=0;i<res.data.length;i++)
-						dict_arr.push({label: res.data[i].label, value: res.data[i].value});
-				}
-				return dict_arr;
-			});
-		},
-		//下拉选项：通过value获取label
-		findNameByValue(dict_arr, dict_value){
-			for(let i=0,j=dict_arr.length;i<j;i++){
-				if(dict_arr[i].value == dict_value)
-					return dict_arr[i].label;
-			}
-			return '';
+		async beforeHooks () {
+		    //查询字典数据
+            //this.options_xxx = await this.$refs.currTable.findDictByType('xxx');
+            //查询外键数据
+            /*this.options_xxx = await this.$api.xxx.findAll().then(res => {
+                return (res && res.data) ? this.$refs.currTable.findForeignOptions(res.data, "idStr", "nameStr"):[];
+            });*/
+            <%
+               for(column in columns_target) {
+                  if(column.isDict) {
+            %>
+            this.options_${column.fieldName} = await this.$refs.currTable.findDictByType('${column.dictType}');
+            <%
+                  }
+               }
+            %>
+            this.translation = [
+                /*{col:"type", col_label:"type_Label",options: options_type},*/
+                <%
+                   for(column in columns_target) {
+                      if(column.isDict) {
+                %>
+                {col:"${column.fieldName}", col_label:"${column.fieldName}_Label", options: this.options_${column.fieldName}},
+                <%
+                      }
+                   }
+                %>
+            ],
+
+            //调用findPage查询数据
+            this.isReady = true
 		},
 	},
 	mounted() {},
-	async created() {
-		//查询字典数据
-		//options = await findDictByType('type');
-		<%
-		   for(column in columns_target) {
-			  if(column.isDict) {
-		%>
-		this.options_${column.fieldName} = await this.findDictByType('${column.dictType}');
-		<%
-			  }
-		   }
-		%>
-		this.translation = [
-			/*{col:"type", col_label:"type_Label",options: options_type},*/
-			<%
-			   for(column in columns_target) {
-				  if(column.isDict) {
-			%>
-			{col:"${column.fieldName}", col_label:"${column.fieldName}_Label", options: this.options_${column.fieldName}},
-			<%
-				  }
-			   }
-			%>
-		],
-
-		//调用findPage查询数据
-		this.isReady = true
-	},
+	created() {},
 }
 </script>
 

@@ -31,6 +31,15 @@ export const findPage = (data) => {
     })
 }
 
+// 查询所有数据
+export const findAll = (data) => {
+    return axios({
+        url: '/${table.objectName}/findAll',
+        method: 'post',
+        data
+    })
+}
+
 // 根据id查询
 export const findById = (params) => {
     return axios({
@@ -39,3 +48,14 @@ export const findById = (params) => {
         params
     })
 }
+
+<% if(!isEmpty(table.uniqueKeys)) { %>
+// 编码唯一性校验
+export const isUnique = (params) => {
+    return axios({
+       url: '/${table.objectName}/isUnique',
+       method: 'get',
+       params
+    })
+ }
+ <% } %>

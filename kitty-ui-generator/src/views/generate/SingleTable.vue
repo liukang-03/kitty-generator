@@ -20,9 +20,9 @@
     </div>
     
     <div class="right-container">
+      <!-- 表描述 -->
       <div class="base-info">
-        <el-form ref="tableForm" class="tableForm" :model="tableModel" :inline="true" label-width="100px"
-          size="small">
+        <el-form ref="tableForm" class="tableForm" :model="tableModel" :inline="true" label-width="100px" size="small">
           <el-form-item label="表名">
             <el-input v-model="tableModel.name" :readonly="true"></el-input>
           </el-form-item>
@@ -34,6 +34,7 @@
           </el-form-item>
         </el-form>
       </div>
+      <!-- 列描述列表 -->
       <div class="column-info">
         <el-table :data="tableModel.columns" class="right-table" size="mini" height="375" max-height="375" stripe>
           <el-table-column prop="name" label="" width="32">
@@ -74,9 +75,38 @@
               <el-input v-show="scope.row.dict" size="small" v-model="scope.row.dictType"></el-input>
             </template>
           </el-table-column>
-
+          <el-table-column prop="dictType" label="外键" width="125">
+            <template slot-scope="scope">
+              <el-button size="small" @click="setForeignKey(scope.row)">外键</el-button>
+            </template>
+          </el-table-column>
         </el-table>
       </div>
+      <!-- 外键属性设置 -->
+      <el-dialog title="外键属性设置" width="45%" :visible.sync="foreign_DialogVisible" :close-on-click-modal="false" >
+        <el-form :model="foreign_DataForm" label-width="150px" ref="foreign_DataForm" size="small">
+          <el-form-item label="本表" prop="selfTable"  >
+            <el-input v-model="foreign_DataForm.selfTable.name" :readonly="true" ></el-input>
+          </el-form-item>
+          <el-form-item label="本表字段" prop="selfColumn"  >
+            <el-input v-model="foreign_DataForm.selfColumn.name" :readonly="true" ></el-input>
+          </el-form-item>
+          <el-form-item label="关联表" prop="refTable"  >
+            <!-- <el-select style="width:100%" v-model="foreign_DataForm.refTable" clearable filterable placeholder="请选择关联表" >
+              <el-option v-for="item in options_carId" :key="item.value" :label="item.label" :value="item.value"></el-option>
+            </el-select> -->
+          </el-form-item>
+          <el-form-item label="关联字段" prop="refColumn"  >
+            <!-- <el-select style="width:100%" v-model="foreign_DataForm.refColumn" clearable filterable placeholder="请选择关联字段" >
+              <el-option v-for="item in options_pileId" :key="item.value" :label="item.label" :value="item.value"></el-option>
+            </el-select> -->
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button size="small" @click.native="editDialogVisible = false">{{$t('action.close')}}</el-button>
+        </div>
+      </el-dialog>
+      <!-- 代码生成设置 -->
       <div class="option-info">
         <el-form ref="optionForm" class="optionForm" :inline="true" label-width="70px"
           size="small">
@@ -125,6 +155,9 @@ export default {
       datasourceVisible: false,
       selectTableDialogVisible: false,
       disabledGenerateBtn: true,
+
+      foreign_DialogVisible: false,
+
       baseUrl: this.global.baseUrl,
       filterText: "",
       selectTableData: null,
@@ -145,7 +178,13 @@ export default {
           prop: "description",
           label: "描述"
         }
-      ]
+      ],
+      foreign_DataForm: { 
+        refTable: {name: ''}, 
+        refColumn: {name: ''}, 
+        selfTable:  {name: ''}, 
+        selfColumn:  {name: ''},
+      },
     }
   },
   watch: {
@@ -202,6 +241,7 @@ export default {
         if (res.code == 200) {
           this.generateModel = res.data
           this.treeData = this.generateModel.tableModels
+          debugger
           this.generateModel.outPutFolderPath = 'X:\\draft\\kitty-generator\\out'
           this.disabledGenerateBtn = false
         } else {
@@ -244,6 +284,12 @@ export default {
           return true;
       }
       return false;
+    },
+    //外键设置
+    setForeignKey(row) {
+      this.foreign_DialogVisible = true;
+      debugger
+      // this.foreign_DataForm.selfTable = ''
     },
   }
 }

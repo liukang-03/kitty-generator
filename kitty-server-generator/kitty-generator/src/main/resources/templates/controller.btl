@@ -18,6 +18,9 @@ import com.hhlx.core.page.PageRequest;
 import ${table.modelPackageName}.${table.className};
 import ${table.servicePackageName}.${table.className}Service;
 
+import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * ---------------------------
  * ${table.description} (${table.className}Controller)		 
@@ -63,6 +66,15 @@ public class ${table.className}Controller {
 	public HttpResult findPage(@RequestBody PageRequest pageRequest) {
 		return HttpResult.ok(${table.objectName}Service.findPage(pageRequest));
 	}
+
+	/**
+     * 查询所有数据
+     * @return
+     */
+    @PostMapping(value="/findAll")
+    public HttpResult findAll() {
+        return HttpResult.ok(${table.objectName}Service.findAll());
+    }
 	
     /**
      * 根据主键查询
