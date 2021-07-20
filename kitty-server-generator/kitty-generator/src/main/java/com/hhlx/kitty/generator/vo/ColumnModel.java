@@ -39,10 +39,16 @@ public class ColumnModel {
 
     /* 是否是查询条件 */
     private boolean isSearch;
-    /* 是否是字典项 */
-    private boolean isDict;
-    /* 字典项类型 */
-    private String dictType;
+	/* 字典 */
+	private DictModel dictModel;
+	/* 外键 */
+	private ForeignKeyModel foreignKeyModel;
+
+	public ColumnModel() {
+		this.dictModel = new DictModel();
+		this.foreignKeyModel = new ForeignKeyModel();
+	}
+
 
 	public String getFieldName() {
 		return fieldName;
@@ -135,19 +141,19 @@ public class ColumnModel {
 		isSearch = search;
 	}
 
-	public boolean isDict() {
-		return isDict;
+	public DictModel getDictModel() {
+		return dictModel;
 	}
 
-	public void setDict(boolean dict) {
-		isDict = dict;
+	public void setDictModel(DictModel dictModel) {
+		this.dictModel = dictModel;
 	}
 
-	public String getDictType() {
-		return dictType;
+	public ForeignKeyModel getForeignKeyModel() {
+		return foreignKeyModel;
 	}
 
-	public void setDictType(String dictType) {
-		this.dictType = dictType;
+	public void setForeignKeyModel(ForeignKeyModel foreignKeyModel) {
+		this.foreignKeyModel = foreignKeyModel;
 	}
 }

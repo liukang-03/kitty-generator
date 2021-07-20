@@ -21,7 +21,7 @@
 				<el-date-picker v-model="filters.${column.fieldName}" type="datetime" placeholder="选择${column.description}"
 					  style="width:200px;" >
 				</el-date-picker>
-			<% } else if(column.isDict) { %>
+			<% } else if(column.dictModel.isDict || column.foreignKeyModel.isForeignKey) { %>
 				<el-select style="width:200px;" v-model="filters.${column.fieldName}" clearable filterable placeholder="请选择${column.description}" >
 					<el-option v-for="item in options_${column.fieldName}" :key="item.value" :label="item.label" :value="item.value"></el-option>
 				</el-select>
@@ -66,7 +66,7 @@
 					  style="width:100%;"  align="right" >
 				</el-date-picker>		
 			<%
-				} else if(column.isDict) {
+				} else if(column.dictModel.isDict || column.foreignKeyModel.isForeignKey) {
 			%>
 				<el-select style="width:100%" v-model="dataForm.${column.fieldName}" clearable filterable placeholder="请选择${column.description}" :disabled="showParticulars" >
 					<el-option v-for="item in options_${column.fieldName}" :key="item.value" :label="item.label" :value="item.value"></el-option>
@@ -133,7 +133,7 @@ export default {
 				for(column in columns_target) {
 					if(strutil.toLowerCase(column.fieldName) != "id") {
 			%>
-					<% if(column.isDict){ %>
+					<% if(column.dictModel.isDict || column.foreignKeyModel.isForeignKey){ %>
 				{prop:"${column.fieldName}_Label", label:"${column.description}", minWidth:100 },
 					<% } else { %>
 				{prop:"${column.fieldName}", label:"${column.description}", minWidth:100, <% if(column.dataType == "datetime"){ %> formatter: dateFormat_Table <% } %> },
@@ -150,7 +150,7 @@ export default {
 			//字典项
 			<%
 			   for(column in columns_target) {
-				  if(column.isDict) {
+				  if(column.dictModel.isDict || column.foreignKeyModel.isForeignKey) {
 			%>
 			options_${column.fieldName}: [],
 			<%
@@ -262,36 +262,42 @@ export default {
 			})
 		},
 		async beforeHooks () {
-		    //查询字典数据
-            //this.options_xxx = await this.$refs.currTable.findDictByType('xxx');
-            //查询外键数据
-            /*this.options_xxx = await this.$api.xxx.findAll().then(res => {
-                return (res && res.data) ? this.$refs.currTable.findForeignOptions(res.data, "idStr", "nameStr"):[];
-            });*/
-            <%
-               for(column in columns_target) {
-                  if(column.isDict) {
-            %>
-            this.options_${column.fieldName} = await this.$refs.currTable.findDictByType('${column.dictType}');
-            <%
-                  }
-               }
-            %>
-            this.translation = [
-                /*{col:"type", col_label:"type_Label",options: options_type},*/
-                <%
-                   for(column in columns_target) {
-                      if(column.isDict) {
-                %>
-                {col:"${column.fieldName}", col_label:"${column.fieldName}_Label", options: this.options_${column.fieldName}},
-                <%
-                      }
-                   }
-                %>
-            ],
+			//查询字典数据
+			//this.options_xxx = await this.$refs.currTable.findDictByType('xxx');
+			//查询外键数据
+			/*this.options_xxx = await this.$api.xxx.findAll().then(res => {
+				return (res && res.data) ? this.$refs.currTable.findForeignOptions(res.data, "idStr", "nameStr"):[];
+			});*/
+			<% for(column in columns_target) { %>
+				<% if(column.dictModel.isDict) { %>
+						<% if(!isEmpty(column.dictModel.dictType)){ %>
+			this.options_${column.fieldName} = await this.$refs.currTable.findDictByType('${column.dictModel.dictType}');
+						<% } else if(!isEmpty(column.dictModel.kvList)){ %>
+			this.options_${column.fieldName} = [<% for(dictKv in column.dictModel.kvList){ %>{label: '${dictKv.label}', value: '${dictKv.value}'}, <% } %>]
+						<% } else { %>
+			this.options_${column.fieldName} = await this.$refs.currTable.findDictByType('XXX');
+						<% }%>
+				<% } else if(column.foreignKeyModel.isForeignKey){ %>
+			this.options_${column.fieldName} = await this.$api.${column.foreignKeyModel.tableName}.findAll().then(res => {
+				return (res && res.data) ? this.$refs.currTable.findForeignOptions(res.data, "${column.foreignKeyModel.columnId}", "${column.foreignKeyModel.columnName}"):[];
+			});
+				<% } %>
+			<%  } %>
+			this.translation = [
+				/*{col:"type", col_label:"type_Label",options: options_type},*/
+				<%
+				   for(column in columns_target) {
+					  if(column.dictModel.isDict || column.foreignKeyModel.isForeignKey) {
+				%>
+				{col:"${column.fieldName}", col_label:"${column.fieldName}_Label", options: this.options_${column.fieldName}},
+				<%
+					  }
+				   }
+				%>
+			],
 
-            //调用findPage查询数据
-            this.isReady = true
+			//调用findPage查询数据
+			this.isReady = true
 		},
 	},
 	mounted() {},

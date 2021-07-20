@@ -62,48 +62,75 @@
           <el-table-column prop="description" label="描述" width="100"></el-table-column>
           <el-table-column prop="search" label="是否查询" width="75" >
             <template slot-scope="scope">
-              <el-checkbox v-model="scope.row.search" ></el-checkbox>
+              <el-checkbox v-model="scope.row.search" v-if="isNotExclude(scope.row,'src')" ></el-checkbox>
             </template>
           </el-table-column>
-          <el-table-column prop="dict" label="是否字典" width="75">
+          <el-table-column prop="dictModel" label="是否字典" width="75">
             <template slot-scope="scope">
-              <el-checkbox v-model="scope.row.dict" ></el-checkbox>
+              <el-checkbox v-model="scope.row.dictModel.dict" v-if="isNotExclude(scope.row,'src')"  ></el-checkbox>
+              <el-link type="primary" v-if="scope.row.dictModel.dict" size="small" @click="setDict(scope.row)">字典</el-link>
             </template>
           </el-table-column>
-          <el-table-column prop="dictType" label="字典类型" width="125">
+          <el-table-column prop="foreignKeyModel" label="是否外键" width="75">
             <template slot-scope="scope">
-              <el-input v-show="scope.row.dict" size="small" v-model="scope.row.dictType"></el-input>
-            </template>
-          </el-table-column>
-          <el-table-column prop="dictType" label="外键" width="125">
-            <template slot-scope="scope">
-              <el-button size="small" @click="setForeignKey(scope.row)">外键</el-button>
+              <el-checkbox v-model="scope.row.foreignKeyModel.foreignKey" v-if="isNotExclude(scope.row,'src')" ></el-checkbox>
+              <el-link type="primary" v-if="scope.row.foreignKeyModel.foreignKey" size="small" @click="setForeignKey(scope.row)">外键</el-link>
             </template>
           </el-table-column>
         </el-table>
       </div>
       <!-- 外键属性设置 -->
       <el-dialog title="外键属性设置" width="45%" :visible.sync="foreign_DialogVisible" :close-on-click-modal="false" >
-        <el-form :model="foreign_DataForm" label-width="150px" ref="foreign_DataForm" size="small">
-          <el-form-item label="本表" prop="selfTable"  >
-            <el-input v-model="foreign_DataForm.selfTable.name" :readonly="true" ></el-input>
+        <el-form label-width="150px" size="small" >
+          <el-form-item label="本表">
+            <el-input v-model="tableModel.description" :readonly="true" ></el-input>
           </el-form-item>
-          <el-form-item label="本表字段" prop="selfColumn"  >
-            <el-input v-model="foreign_DataForm.selfColumn.name" :readonly="true" ></el-input>
+          <el-form-item label="本表字段" >
+            <el-input v-model="columnModel.description" :readonly="true" ></el-input>
           </el-form-item>
-          <el-form-item label="关联表" prop="refTable"  >
-            <!-- <el-select style="width:100%" v-model="foreign_DataForm.refTable" clearable filterable placeholder="请选择关联表" >
-              <el-option v-for="item in options_carId" :key="item.value" :label="item.label" :value="item.value"></el-option>
-            </el-select> -->
+          <el-form-item label="关联表" >
+            <el-select style="width:100%" v-model="columnModel.foreignKeyModel.tableName" @change="changeColumns"  
+                  clearable filterable placeholder="请选择关联表" >
+              <el-option v-for="item in treeData" :key="item.objectName" :label="item.description" :value="item.objectName"></el-option>
+            </el-select>
           </el-form-item>
-          <el-form-item label="关联字段" prop="refColumn"  >
-            <!-- <el-select style="width:100%" v-model="foreign_DataForm.refColumn" clearable filterable placeholder="请选择关联字段" >
-              <el-option v-for="item in options_pileId" :key="item.value" :label="item.label" :value="item.value"></el-option>
-            </el-select> -->
+          <el-form-item label="关联字段" >
+            <el-select style="width:100%" v-model="columnModel.foreignKeyModel.columnId" clearable filterable placeholder="请选择关联字段" >
+              <el-option v-for="item in options_columns" v-show="isNotExclude(item)" 
+                  :key="item.fieldName" :label="item.description" :value="item.fieldName"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="目标翻译字段" >
+            <el-select style="width:100%" v-model="columnModel.foreignKeyModel.columnName" clearable filterable placeholder="请选择目标翻译字段" >
+              <el-option v-for="item in options_columns" v-show="isNotExclude(item)" 
+                  :key="item.fieldName" :label="item.description" :value="item.fieldName"></el-option>
+            </el-select>
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
-          <el-button size="small" @click.native="editDialogVisible = false">{{$t('action.close')}}</el-button>
+          <el-button type="primary" size="small" @click.native="foreign_DialogVisible = false">确定</el-button>
+        </div>
+      </el-dialog>
+      <!-- 字典设置 -->
+      <el-dialog title="字典设置" width="45%" :visible.sync="Dict_DialogVisible" :close-on-click-modal="false" >
+        <el-form label-width="150px" size="small" class="dict-dialog">
+          <el-form-item label="本表字段">
+            <el-input size="small" v-model="columnModel.description" :readonly="true"></el-input>
+          </el-form-item>
+          <el-form-item label="字典类型">
+            <el-input size="small" v-model="columnModel.dictModel.dictType"></el-input>
+          </el-form-item>
+          <el-form-item label="自定义字典">
+            <el-button type="success" size="small" @click="addDictRow()" style="float:left;">添加行</el-button>
+          </el-form-item>
+          <el-form-item v-for="(item,index) in columnModel.dictModel.kvList" :key="index" class="dict-item">
+            名称 <el-input v-model="item.label" class="dict-label" size="small" ></el-input>  
+            值 <el-input v-model="item.value" class="dict-value"  size="small" ></el-input>
+            <el-button type="danger" size="small" @click="deleteDictRow(item,index)">删除行</el-button>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button type="primary" size="small" @click.native="Dict_DialogVisible = false">确定</el-button>
         </div>
       </el-dialog>
       <!-- 代码生成设置 -->
@@ -155,9 +182,6 @@ export default {
       datasourceVisible: false,
       selectTableDialogVisible: false,
       disabledGenerateBtn: true,
-
-      foreign_DialogVisible: false,
-
       baseUrl: this.global.baseUrl,
       filterText: "",
       selectTableData: null,
@@ -179,12 +203,16 @@ export default {
           label: "描述"
         }
       ],
-      foreign_DataForm: { 
-        refTable: {name: ''}, 
-        refColumn: {name: ''}, 
-        selfTable:  {name: ''}, 
-        selfColumn:  {name: ''},
+
+      // 业务扩展
+      foreign_DialogVisible: false,
+      Dict_DialogVisible: false,
+      exclude_fields:['createBy','createTime','lastUpdateBy','lastUpdateTime','delFlag'],
+      columnModel: {
+        foreignKeyModel:{}, dictModel: {}
       },
+      options_columns: [],
+      
     }
   },
   watch: {
@@ -241,7 +269,6 @@ export default {
         if (res.code == 200) {
           this.generateModel = res.data
           this.treeData = this.generateModel.tableModels
-          debugger
           this.generateModel.outPutFolderPath = 'X:\\draft\\kitty-generator\\out'
           this.disabledGenerateBtn = false
         } else {
@@ -275,7 +302,13 @@ export default {
         this.generateLoading = false
       })
     },
-    //是否是唯一索引键
+    // 排除字段： createBy、createTime、lastUpdateBy、lastUpdateTime、delFlag
+    isNotExclude(row,src) {
+      if(src == 'src' && row.fieldName == 'id')
+        return false;
+      return this.exclude_fields.indexOf(row.fieldName) == -1;
+    },
+    // 是否是唯一索引键
     isUniqueKey(row) {
       if(!this.tableModel.uniqueKeys || this.tableModel.uniqueKeys.length == 0)
         return false;
@@ -285,11 +318,36 @@ export default {
       }
       return false;
     },
-    //外键设置
+    // 表名改变时，动态改变 字段下拉列表
+    changeColumns(selTablename){
+      if(!selTablename)
+        return
+      for(let i=0,j=this.treeData.length;i<j;i++){
+        if(this.treeData[i].objectName == selTablename) {
+          this.options_columns = this.treeData[i].columns;
+          break;
+        }
+      }
+    },
+    // 外键设置
     setForeignKey(row) {
       this.foreign_DialogVisible = true;
-      debugger
-      // this.foreign_DataForm.selfTable = ''
+      this.columnModel = row;
+      this.changeColumns(this.columnModel.foreignKeyModel.tableName);
+    },
+    // 字典设置
+    setDict(row) {
+      this.Dict_DialogVisible = true;
+      this.columnModel = row;
+    },
+    // 添加自定义字典 行
+    addDictRow(){
+      let that = this;
+      that.columnModel.dictModel.kvList.push({label:'',value:''});
+    },
+    // 删除自定义字典 行
+    deleteDictRow(item,index){
+      this.columnModel.dictModel.kvList.splice(index,1)
     },
   }
 }
@@ -347,5 +405,18 @@ export default {
 .column-info .el-input--small>input.el-input__inner {
     height: 23px;
     line-height: 23px;
+}
+.dict-dialog .dict-item {
+  margin-left: -150px;
+}
+.dict-dialog .dict-item .dict-label {
+  width: 100px;
+  margin-right: 15px;
+  margin-left: 3px;
+}
+.dict-dialog .dict-item .dict-value {
+  width: 100px;
+  margin-left: 3px;
+  margin-right: 10px;
 }
 </style>
