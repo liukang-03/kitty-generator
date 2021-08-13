@@ -197,7 +197,7 @@ export default {
 				let tmpLs = res.data
 				for(let i=0,j=tmpLs.content.length;i<j;i++) {
 					this.translation.forEach(item => {
-						tmpLs.content[i][item.col_label] = this.$refs.currTable.findNameByValue(item.options, tmpLs.content[i][item.col])
+						tmpLs.content[i][item.col_label] = this.$api.dict.findNameByValue(item.options, tmpLs.content[i][item.col])
 					});
 				}
 				this.pageResult = tmpLs
@@ -263,7 +263,7 @@ export default {
 		},
 		async beforeHooks () {
 			//查询字典数据
-			//this.options_xxx = await this.$refs.currTable.findDictByType('xxx');
+			//this.options_xxx = await this.$api.dict.findDictByType('xxx');
 			//查询外键数据
 			/*this.options_xxx = await this.$api.xxx.findAll().then(res => {
 				return (res && res.data) ? this.$refs.currTable.findForeignOptions(res.data, "idStr", "nameStr"):[];
@@ -271,11 +271,11 @@ export default {
 			<% for(column in columns_target) { %>
 				<% if(column.dictModel.isDict) { %>
 						<% if(!isEmpty(column.dictModel.dictType)){ %>
-			this.options_${column.fieldName} = await this.$refs.currTable.findDictByType('${column.dictModel.dictType}');
+			this.options_${column.fieldName} = await this.$api.dict.findDictByType('${column.dictModel.dictType}');
 						<% } else if(!isEmpty(column.dictModel.kvList)){ %>
 			this.options_${column.fieldName} = [<% for(dictKv in column.dictModel.kvList){ %>{label: '${dictKv.label}', value: '${dictKv.value}'}, <% } %>]
 						<% } else { %>
-			this.options_${column.fieldName} = await this.$refs.currTable.findDictByType('XXX');
+			this.options_${column.fieldName} = await this.$api.dict.findDictByType('XXX');
 						<% }%>
 				<% } else if(column.foreignKeyModel.isForeignKey){ %>
 			this.options_${column.fieldName} = await this.$api.${column.foreignKeyModel.tableName}.findAll().then(res => {
